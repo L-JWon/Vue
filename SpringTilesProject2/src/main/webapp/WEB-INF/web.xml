@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://java.sun.com/xml/ns/javaee https://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+   <!-- 
+      web.xml에는 톰캣이 읽어가는 파일 지정 = jsp, servlet
+      -> Controller : 반드시 web.xml에 등록해야 한다
+      <동작하는 방법>
+      사용자 요청(*.do) : DispatcherServlet
+         =HandlerMapping : Model클래스를 찾아 준다
+            Model : 요청에 대한 처리를 담당하는 부분
+            =Spring : ~Controller
+            =Struts : ~Action
+         =ViewResolver : JSP를 찾아 준다
+         ================> 동작을 할 수 있게 메뉴얼 제작(XML, annotation)
+    -->
+    
+    <!--  1. WebSocket 
+    	  2. Security
+    	  
+    	  1) Spring Basic
+    	     = Container
+    	     		ㄴ BeanFactory
+    	     			  | 로 부터 상속받은 것이				자바버전 
+    	     		  ApplicationContext    => AnnotationConfigApplicationContext
+    	     		      |				              로부터 상속 받은 애							애플리케이션을 짜느냐 웹을 짜느냐 차이
+    	     		  WebapplicationContext => AnnotationConfigWebApplicationContext
+    	     		  => DL/ DI 주입처리  (클래스 찾기, 객체 생성 시에 필요한 데이터를 주입하는 역할)
+    	     		  => 클래스와 클래스 사이의 연관 관계 설정 
+    	     = DI
+    	               작은 개념 : 객체 생성 시 필요한 데이터를 주입, 클래스 객체 주소 주입 (싱글턴)
+    	                ========================
+    	                 setter DI, 생성자 DI(매개변수)
+    	               큰 개념 : 클래스와 클래스의 연관관계 설정
+    	     = AOP
+    	               중복된 소스를 모아서 필요한 위치에서 호출이 가능하게 만든다 (공통모듈)
+    	        OOP를 보완한 개념 (자동호출 (콜백))
+    	        	Aspect
+    	        	JoinPoint : 호출 시점을 지정해주는 것 
+    	        			    Before(시작과 동시에)
+    	        			    After
+    	        			    AfterThrowing
+    	        			    AfterReturning
+    	        			    Around
+    	        			       메소드를 대상으로
+    	        	PointCut : AOP 대상의 메소드
+    	        	Weaving : 메소드+ AOP
+    	        	Advice : JoinPint + PointCut
+    	        	================================ Advice 여러개를 모아서 Aspect
+    	        	=> 트랜잭션, log파일, Security(인가, 인증, 권한 부여)
+    	        	=> 모든 page에 동일하게 적용되는 데이터, 빅데이터 (데이터 수집, 분석) 등을 사용할 때 AOP사용이 편하다 
+    	     = *** MVC
+    	     	Model : 요청 처리 => 요청에 따라서 데이터베이스를 수행하거나 결과값을 request나 session에 실어서 JSP에 전송
+    	     			최근엔 request 대신 (전송 객채 : Model,RedirectAttributes 사용)
+    	     			=> 스프링에서는 반드시 앞에다가 @Controller 붙여야한다
+    	     			=> 요청 구분 
+    	     			   @GetMapping   @RequestMapping   @PostMapping => Annotation(구분자 역할을 수행)  
+    	     	View :  Model에서 보내준 데이터를 출력 =브라우저  (Html,JSP)
+    	     	Controller : Front Controller (DispatcherServlet)
+    	     				 요청을 받아서 Model을 호출하는 역할 => JSP로 데이터 전송 
+    	     = ORM : Object Realation Mapper 
+    	     		  데이터 베이스 관련 라이브러리   
+    	     		  MyBatis, Hibernate(JPA)
+    	     		  ======= SQL
+    	     		  
+    	      MVC 동작 구조
+    	            사용자 요청 (JSP) ============== DispatcherServlet 이 .do를 받아서 Model을 호출  ============= 요청에 따라 Model클래스를 호출 
+    	            																						| HandlerMapping
+    	            										                                                       기능별 구분  @GetMapping, @RequestMapping, @PostMapping
+    	            					  <================== Model에서 넘어온 request, model, session 결과값 받기 
+    	            					  |
+    	            					  | ViewResolver : JSP를 찾아서 request를 전송 (경로명,확장자를 써놓아야 전송)
+    	            					 JSP
+    	            					 === 받은 데이터 출력 (JSTL,EL)		  
+    	      =>   <a><form> => .do
+    	     
+    	     
+    	     ==> 여기까지 기본 과정
+    	     ======================== WebSocket / Security / Task / RestFul 고급과정 
+    -->
+   <servlet>
+      <servlet-name>appServlet</servlet-name>
+      <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+       <init-param>
+         <param-name>contextConfigLocation</param-name>
+         <param-value>/WEB-INF/config/application-*.xml</param-value>
+      </init-param> 
+   </servlet>
+      
+   <servlet-mapping>
+      <servlet-name>appServlet</servlet-name>
+      <url-pattern>*.do</url-pattern>
+   </servlet-mapping>
+   <!-- 
+      request, response 미사용을 권고함. = 한글 변환을 못한다(request를 못 쓰니깐)
+      그니까 한글 변환을 여기서 해 줘야 한다.
+    -->
+    <filter>
+     <filter-name>encodingFilter</filter-name>
+     <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+     <init-param>
+       <param-name>encoding</param-name>
+       <param-value>UTF-8</param-value>
+     </init-param>
+   </filter>
+   
+   <filter-mapping>
+     <filter-name>encodingFilter</filter-name>
+     <url-pattern>/*</url-pattern>
+   </filter-mapping>
+   
+   <!-- 에러 처리(/*=모든 웹주소에서) -->
+   
+</web-app>
